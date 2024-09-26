@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicio Técnico</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            background-color: #eef2f7;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .container h2 {
+            margin-top: 0;
+            color: #0056b3;
+            font-size: 24px;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+        }
+
+        .container p {
+            font-size: 16px;
+            margin: 10px 0;
+            color: #333;
+        }
+
+        .container button,
+        .container a {
+            display: inline-block;
+            background-color: #0056b3;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 8px 4px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .container button:hover,
+        .container a:hover {
+            background-color: #004494;
+            transform: scale(1.05);
+        }
+
+        .container input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        .container input:focus {
+            border: 1px solid #0056b3;
+            outline: none;
+        }
+
+        #status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #d32f2f;
+        }
+
+        .loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" role="main">
+        <h2>Servicio Técnico</h2>
+        <p><strong>Chip ID ESP32:</strong> <span id="chipID" aria-live="polite"></span></p>
+        <p><strong>Tasa de flujo:</strong> <span id="flowRate" aria-live="polite"></span> L/min</p>
+        <p><strong>Factor de Calibración Actual:</strong> <span id="factor" aria-live="polite"></span></p>
+        <p><strong>Modo de Sueño Actual:</strong> <span aria-live="polite">Proxima Actualizacion</span></p>
+        <p><strong>Intervalo de Sueño Actual:</strong> <span id="sleeptime" aria-live="polite"></span> segundos</p>
+        <button onclick="rebootDevice()">Reiniciar Dispositivo</button>
+        <a href="/downloadErrors" download="errors.txt">Descargar Errores</a>
+        <button onclick="deleteErrors()">Borrar Errores</button>
+
+        <h2>Calibración del Caudalímetro</h2>
+        <input type="number" id="calibrationFactor" placeholder="Ingrese el factor de calibración" aria-label="Factor de calibración">
+        <button onclick="setCalibration()">Establecer Calibración</button>
+
+        <h2>Modo de Sueño</h2>
+        <input type="number" id="sleepInterval" placeholder="Ingrese el intervalo en segundos" aria-label="Intervalo de sueño">
+        <button onclick="setSleepConfig()">Establecer Tiempo</button>
+
+        <div id="status" role="alert"></div>
+    </div>
+
+    <script>
+        function updateStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('chipID').innerText = data.chipID;
+                    document.getElementById('flowRate').innerText = parseFloat(data.flowRate).toFixed(2);
+                    document.getElementById('factor').innerText = parseFloat(data.factor).toFixed(2);
+                    document.getElementById('sleeptime').innerText = data.sleeptime;
+                })
+                .catch(error => {
+                    document.getElementById('status').innerText = "Error obteniendo el estado.";
+                    console.error('Error:', error);
+                });
+        }
+
+        function setLoading(button, loading) {
+            if (loading) {
+                button.classList.add('loading');
+                button.disabled = true;
+                button.innerText = 'Cargando...';
+            } else {
+                button.classList.remove('loading');
+                button.disabled = false;
+                button.innerText = button.getAttribute('data-original-text');
+            }
+        }
+
+        function rebootDevice() {
+            const button = event.target;
+            button.setAttribute('data-original-text', button.innerText);
+            setLoading(button, true);
+            fetch('/reboot', { method: 'POST' })
+                .then(response => {
+                    setLoading(button, false);
+                    if (response.ok) {
+                        document.getElementById('status').innerText = "El dispositivo se está reiniciando...";
+                    } else {
+                        document.getElementById('status').innerText = "Error al intentar reiniciar el dispositivo.";
+                    }
+                })
+                .catch(error => {
+                    setLoading(button, false);
+                    document.getElementById('status').innerText = "Error al intentar reiniciar el dispositivo.";
+                    console.error('Error:', error);
+                });
+        }
+
+        function deleteErrors() {
+            const button = event.target;
+            button.setAttribute('data-original-text', button.innerText);
+            setLoading(button, true);
+            fetch('/deleteErrors', { method: 'POST' })
+                .then(response => response.text())
+                .then(data => {
+                    setLoading(button, false);
+                    document.getElementById('status').innerText = data;
+                })
+                .catch(error => {
+                    setLoading(button, false);
+                    document.getElementById('status').innerText = "Error al intentar borrar los errores.";
+                    console.error('Error:', error);
+                });
+        }
+
+        function setCalibration() {
+            const calibrationFactor = document.getElementById('calibrationFactor').value;
+            if (calibrationFactor === '') {
+                document.getElementById('status').innerText = "Ingrese un factor de calibración válido.";
+                return;
+            }
+            const button = event.target;
+            button.setAttribute('data-original-text', button.innerText);
+            setLoading(button, true);
+            fetch('/setCalibration', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ factor: parseFloat(calibrationFactor) })
+            })
+                .then(response => response.text())
+                .then(data => {
+                    setLoading(button, false);
+                    document.getElementById('status').innerText = data;
+                })
+                .catch(error => {
+                    setLoading(button, false);
+                    document.getElementById('status').innerText = "Error al establecer la calibración.";
+                    console.error('Error:', error);
+                });
+        }
+
+        function setSleepConfig() {
+            const sleepInterval = document.getElementById('sleepInterval').value;
+            if (sleepInterval === '') {
+                document.getElementById('status').innerText = "Ingrese un intervalo de sueño válido.";
+                return;
+            }
+            const button = event.target;
+            button.setAttribute('data-original-text', button.innerText);
+            setLoading(button, true);
+            fetch('/setSleepConfig', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ interval: parseInt(sleepInterval) })
+            })
+                .then(response => response.text())
+                .then(data => {
+                    setLoading(button, false);
+                    document.getElementById('status').innerText = data;
+                })
+                .catch(error => {
+                    setLoading(button, false);
+                    document.getElementById('status').innerText = "Error al establecer la configuración de sueño.";
+                    console.error('Error:', error);
+                });
+        }
+
+        setInterval(updateStatus, 1000);
+    </script>
+</body>
+
+</html>

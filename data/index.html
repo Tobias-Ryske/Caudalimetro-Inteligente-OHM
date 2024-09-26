@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio de Sesión</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: url('https://source.unsplash.com/1600x900/?technology,abstract') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .container {
+            width: 90%;
+            max-width: 350px;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .slider {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            width: 200%;
+        }
+        .card {
+            background-color: white;
+            padding: 20px;
+            width: 50%;
+            box-sizing: border-box;
+            text-align: center;
+            border-left: 1px solid #ccc;
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #0066cc;
+            font-size: 20px;
+            border-bottom: 2px solid #0066cc;
+            padding-bottom: 10px;
+        }
+        .card input[type="text"], .card input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+        .card input:focus {
+            border: 1px solid #0066cc;
+            outline: none;
+        }
+        .card button {
+            background-color: #0066cc;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: calc(100% - 20px);
+            font-size: 14px;
+            margin-top: 8px;
+            transition: background 0.3s, transform 0.3s;
+        }
+        .card button:hover {
+            background-color: #004d99;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="slider" id="slider">
+            <div class="card">
+                <h2>Servicio Técnico</h2>
+                <input type="text" placeholder="Usuario" id="tech-username">
+                <input type="password" placeholder="Contraseña" id="tech-password">
+                <button onclick="login('tech')">Iniciar Sesión</button>
+            </div>
+            <div class="card">
+                <h2>Usuario</h2>
+                <input type="text" placeholder="Usuario" id="user-username">
+                <input type="password" placeholder="Contraseña" id="user-password">
+                <button onclick="login('user')">Iniciar Sesión</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentIndex = 0;
+        const slider = document.getElementById('slider');
+
+        function login(type) {
+            let username, password;
+            if (type === 'tech') {
+                username = document.getElementById('tech-username').value;
+                password = document.getElementById('tech-password').value;
+                if (username === 'admin' && password === '2408') {
+                    window.location.href = 'servicio.html';
+                } else {
+                    alert('Credenciales incorrectas para Servicio Técnico');
+                }
+            } else if (type === 'user') {
+                username = document.getElementById('user-username').value;
+                password = document.getElementById('user-password').value;
+                if (username === 'usuario' && password === '2408') {
+                    window.location.href = 'usuario.html';
+                } else {
+                    alert('Credenciales incorrectas para Usuario');
+                }
+            }
+        }
+
+        function slide(direction) {
+            if (direction === 'left' && currentIndex > 0) {
+                currentIndex--;
+            } else if (direction === 'right' && currentIndex < 1) {
+                currentIndex++;
+            }
+            slider.style.transform = `translateX(-${currentIndex * 100 / 2}%)`;
+        }
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let mouseStartX = 0;
+        let mouseEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleGesture();
+        });
+
+        document.addEventListener('mousedown', (e) => {
+            mouseStartX = e.screenX;
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            mouseEndX = e.screenX;
+            handleMouseGesture();
+        });
+
+        function handleGesture() {
+            if (touchEndX < touchStartX) slide('right');
+            if (touchEndX > touchStartX) slide('left');
+        }
+
+        function handleMouseGesture() {
+            if (mouseEndX < mouseStartX) slide('right');
+            if (mouseEndX > mouseStartX) slide('left');
+        }
+    </script>
+</body>
+</html>

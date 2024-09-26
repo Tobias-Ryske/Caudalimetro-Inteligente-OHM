@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración WiFi</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: url('https://source.unsplash.com/1600x900/?technology,abstract') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .container {
+            width: 90%;
+            max-width: 350px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        .container h2 {
+            margin-top: 0;
+            color: #0066cc;
+            font-size: 22px;
+            border-bottom: 2px solid #0066cc;
+            padding-bottom: 10px;
+        }
+        .container h3 {
+            color: #0066cc;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        .container input[type="text"], .container input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 8px 0;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+        .container input:focus {
+            border: 2px solid #0066cc;
+            outline: none;
+        }
+        .container button {
+            background: #0066cc;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: calc(100% - 20px);
+            font-size: 16px;
+            margin-top: 15px;
+            transition: background 0.3s, transform 0.3s;
+        }
+        .container button:hover {
+            background: #004d99;
+            transform: scale(1.05);
+        }
+        #status {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Bienvenido</h2>
+        <h3>Configura su WiFi</h3>
+        <input type="text" id="wifi-ssid" placeholder="SSID" required>
+        <input type="password" id="wifi-password" placeholder="Contraseña" required>
+        <button onclick="configWiFi()">Guardar Configuración</button>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        function configWiFi() {
+            var ssid = document.getElementById('wifi-ssid').value;
+            var password = document.getElementById('wifi-password').value;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/configWiFi", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4) {
+                    var status = document.getElementById('status');
+                    if (xhr.status == 200) {
+                        status.innerText = "Configuración guardada. Reconectando...";
+                        status.style.color = "green";
+                    } else {
+                        status.innerText = "Error al guardar la configuración.";
+                        status.style.color = "red";
+                    }
+                }
+            };
+            xhr.send("ssid=" + encodeURIComponent(ssid) + "&password=" + encodeURIComponent(password));
+        }
+    </script>
+</body>
+</html>
